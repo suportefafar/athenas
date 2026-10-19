@@ -24,8 +24,8 @@ test:
 <% end %>
 production:
   <<: *default
-  host: <%= ENV.fetch("POSTGRES_HOST").to_json %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "postgres-db").to_json %>
   port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
-  username: <%= ENV.fetch("POSTGRES_USER").to_json %>
-  password: <%= ENV.fetch("POSTGRES_PASSWORD").to_json %>
+  username: <%= ENV["POSTGRES_USER"]&.to_json %>
+  password: <%= ENV["POSTGRES_PASSWORD"]&.to_json %>
   database: athenas_production

@@ -7,6 +7,7 @@ RUN bundle install && groupadd --gid 1000 athenas && useradd --uid 1000 --gid 10
 COPY --chown=athenas:athenas . .
 RUN mkdir -p storage tmp/mail tmp/pids log /usr/local/share/athenas/lo-profile && chown -R athenas:athenas storage tmp log /usr/local/share/athenas
 USER athenas
+RUN RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
 RUN libreoffice -env:UserInstallation=file:///usr/local/share/athenas/lo-profile --headless --terminate_after_init --nologo --nodefault --norestore
 EXPOSE 3000
 CMD ["bin/rails", "server", "-b", "0.0.0.0"]
