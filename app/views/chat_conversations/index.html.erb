@@ -1,0 +1,72 @@
+<div class="chat-layout">
+  <aside class="chat-sidebar" aria-label="Conversas">
+    <div class="chat-sidebar-head">
+      <h2>Conversas</h2>
+      <%= button_to "Nova conversa", chat_conversations_path, class: "chat-new" %>
+    </div>
+    <% if @conversations.any? %>
+      <ul class="chat-conversation-list">
+        <% @conversations.each do |conversation| %>
+          <li><%= link_to conversation.title, root_path(conversation_id: conversation.id),
+            class: (conversation == @conversation ? "active" : nil),
+            aria: { current: (conversation == @conversation ? "page" : nil) } %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="metadata">Sua primeira conversa aparecerá aqui.</p>
+    <% end %>
+  </aside>
+
+  <section class="chat-main" aria-label="Chat com o acervo">
+    <% if @messages.empty? %>
+      <div class="chat-welcome">
+        <p class="eyebrow">PERGUNTE AO ACERVO</p>
+        <h1>O que você quer saber?</h1>
+        <p>Faça perguntas sobre os documentos, peça um relatório ou encontre arquivos por palavras-chave. As respostas trazem links para as fontes usadas.</p>
+        <p class="metadata">Exemplos: “Quais documentos mencionam orçamento?” · “Resuma os projetos de extensão” · “Como as entidades citadas se relacionam?”</p>
+      </div>
+    <% else %>
+      <ol class="chat-messages">
+        <% @messages.each do |message| %>
+          <li class="chat-message <%= message.role %>"<% if message == @messages.last && message.role == "assistant" %> id="ultima-resposta"<% end %>>
+            <p class="chat-message-label"><%= message.role == "user" ? "Você" : "Athenas" %></p>
+            <div class="chat-bubble"><%= message.content %></div>
+            <% if message.tool_name == "search_files" && message.tool_query.present? %>
+              <p class="chat-tool"><%= link_to "Pesquisa realizada: #{message.tool_query}", search_path(q: message.tool_query) %>
+                <% if message.search_mode == "semantic" %> · por similaridade<% end %></p>
+            <% end %>
+            <% if message.sources.any? %>
+              <div class="chat-sources">
+                <strong>Fontes consultadas</strong>
+                <ol>
+                  <% message.sources.each do |source| %>
+                    <li>
+                      [<%= source["reference"] %>]
+                      <% if @available_lot_ids.include?(source["lot_id"].to_i) %>
+                        <%= link_to source["title"], lot_path(source["lot_id"]) %>
+                      <% else %>
+                        <%= source["title"] %> <span class="metadata">(indisponível)</span>
+                      <% end %>
+                      <% if source["position"] %><span class="metadata">· trecho <%= source["position"] %></span><% end %>
+                    </li>
+                  <% end %>
+                </ol>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+    <% end %>
+
+    <%= form_with url: chat_messages_path, method: :post, class: "chat-form" do |form| %>
+      <%= form.hidden_field :conversation_id, value: @conversation&.id %>
+      <%= form.label :content, "Sua pergunta" %>
+      <%= form.text_area :content, rows: 3, maxlength: 2_000, required: true,
+        placeholder: "Pergunte sobre os documentos ou peça para encontrar arquivos…" %>
+      <div class="chat-form-footer">
+        <p>Confira as fontes antes de usar uma resposta em decisões ou relatórios.</p>
+        <%= form.submit "Perguntar", data: { turbo_submits_with: "Consultando o acervo…" } %>
+      </div>
+    <% end %>
+  </section>
+</div>

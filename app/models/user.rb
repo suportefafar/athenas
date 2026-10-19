@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
+  has_many :chat_conversations, dependent: :destroy
   has_many :lots, foreign_key: :uploader_id, inverse_of: :uploader
   normalizes :email_address, with: ->(value) { value.strip.downcase }
   validates :name, presence: true, length: { maximum: 150 }

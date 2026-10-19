@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  root "home#index"
+  root "chat_conversations#index"
+  resources :chat_conversations, only: :create
+  resources :chat_messages, only: :create
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest, defaults: { format: :json }
   resource :session, only: %i[new create destroy]
   get "invitation/:token", to: "invitations#edit", as: :invitation

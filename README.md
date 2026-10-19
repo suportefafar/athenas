@@ -1,6 +1,12 @@
 # Athenas
 
-Buscador de documentos em um repositório global, em português brasileiro. Cada arquivo enviado é um lote independente. Rails 8.1, PostgreSQL 17 com Full-Text Search e pgvector, Active Storage Disk, Solid Queue e embeddings locais via Ollama. Não há integrações com Drive/SEI nem geração de respostas por LLM.
+Chat com um repositório global de documentos, em português brasileiro. Cada arquivo enviado é um lote independente. Rails 8.1, PostgreSQL 17 com Full-Text Search e pgvector, Active Storage Disk, Solid Queue, embeddings BGE-M3 locais via Ollama e respostas do Qwen 3.5 9B no servidor institucional. A pesquisa tradicional permanece em **Pesquisar arquivos**.
+
+## Chat com o acervo
+
+A página principal mostra as conversas privadas de cada usuário autenticado. Para encontrar arquivos ou termos, o Qwen chama `search_files`, que usa o mesmo serviço da página de pesquisa (busca lexical, com fallback semântico). Para perguntas sobre conteúdo, relatórios e relações entre entidades, chama `retrieve_excerpts`, que recupera trechos vetorizados por similaridade e recorre à busca lexical quando necessário. O modelo recebe apenas os trechos relevantes, responde com referências numeradas e a interface oferece links autenticados para os documentos. Texto extraído é tratado como dado, não como instrução. As conversas não são enviadas a provedores externos; o Qwen está em `150.164.110.3:8080` e exige chave.
+
+Configure `QWEN_BASE_URL=http://150.164.110.3:8080/v1`, `QWEN_MODEL=qwen3.5-9b` e `QWEN_API_KEY` no `.env` privado. A chave fica somente no servidor Rails e não é enviada ao navegador. `CHAT_MIN_SIMILARITY` (padrão `0.48`) define o limiar inicial da recuperação; calibre com perguntas reais. O chat informa quando não há evidências; relatórios e relações entre entidades dependem da cobertura dos trechos recuperados e ainda exigem conferência nas fontes. O limite atual é de 2.000 caracteres por pergunta, 8 mensagens de histórico, 10 trechos por recuperação e 8 arquivos por pesquisa. Nesta primeira versão, cada resposta é síncrona e pode levar dezenas de segundos no Qwen 9B, especialmente para relatórios.
 
 ## Executar pelo Olympus
 

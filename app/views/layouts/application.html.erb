@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <title>Athenas — busca de documentos</title>
+    <title>Athenas — converse com seu acervo</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %><%= csp_meta_tag %>
     <link rel="icon" type="image/png" href="/icon.png">
@@ -17,6 +17,8 @@
       <% end %>
       <% if current_user %>
         <nav aria-label="Navegação principal">
+          <%= link_to "Chat", root_path %>
+          <%= link_to "Pesquisar arquivos", search_path %>
           <%= link_to "Enviar arquivos", new_upload_path %>
           <%= link_to "Meus uploads", my_uploads_path %>
           <% if current_user.admin? %><%= link_to "Usuários", admin_users_path %><%= link_to "Todos os lotes", admin_lots_path %><% end %>
@@ -29,6 +31,6 @@
       <% flash.each do |kind, message| %><div class="flash <%= kind %>" role="status"><%= message %></div><% end %>
       <%= yield %>
     </main>
-    <footer>Athenas · Repositório compartilhado de documentos</footer>
+    <footer>Athenas · Converse e pesquise no acervo compartilhado</footer>
   </body>
 </html>
