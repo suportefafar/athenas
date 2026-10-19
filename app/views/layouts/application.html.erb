@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <title>Athenas — busca de documentos</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body>
+    <header class="header">
+      <%= link_to "Athenas", root_path, class: "brand" %>
+      <% if current_user %>
+        <nav aria-label="Navegação principal">
+          <%= link_to "Enviar arquivos", new_upload_path %>
+          <%= link_to "Meus uploads", my_uploads_path %>
+          <% if current_user.admin? %><%= link_to "Usuários", admin_users_path %><%= link_to "Todos os lotes", admin_lots_path %><% end %>
+          <span><%= current_user.name %></span>
+          <%= button_to "Sair", session_path, method: :delete, class: "subtle" %>
+        </nav>
+      <% end %>
+    </header>
+    <main class="container">
+      <% flash.each do |kind, message| %><div class="flash <%= kind %>" role="status"><%= message %></div><% end %>
+      <%= yield %>
+    </main>
+    <footer>Athenas · Repositório compartilhado de documentos</footer>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+pt-BR:
+  activerecord:
+    models:
+      user: Usuário
+      lot: Lote
+    attributes:
+      user:
+        name: Nome
+        email_address: E-mail
+        password: Senha
+        password_confirmation: Confirmação de senha
+        role: Papel

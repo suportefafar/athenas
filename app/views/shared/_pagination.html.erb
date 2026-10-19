@@ -1,0 +1,5 @@
+<nav class="pagination" aria-label="Paginação">
+  <% if page > 1 %><%= link_to "← Anterior", url_for(request.query_parameters.merge(page: page - 1)) %><% end %>
+  <span>Página <%= page %><% if pages.positive? %> de <%= pages %><% end %></span>
+  <% if page < pages %><%= link_to "Próxima →", url_for(request.query_parameters.merge(page: page + 1)) %><% end %>
+</nav>

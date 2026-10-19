@@ -1,0 +1,8 @@
+Arquivo: <%= @lot.name %>
+Resultado: <%= @lot.status_label %>
+<%= @lot.processing_error %>
+<% @lot.processing_warnings.each do |warning| %>
+- <%= warning %>
+<% end %>
+
+Detalhes (login obrigatório): <%= lot_url(@lot) %>

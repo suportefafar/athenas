@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.aws
+.env
+.env.*
+!.env.example
+log/*
+tmp/*
+storage/*
+vendor/bundle
+.bundle
+coverage
+config/master.key
+config/credentials*.yml.enc

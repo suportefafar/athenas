@@ -1,0 +1,31 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+development:
+  <<: *default
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost").to_json %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 55432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "athenas").to_json %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "example").to_json %>
+  database: athenas_development
+<% if ENV["DATABASE_URL"].present? %>
+  url: <%= ENV["DATABASE_URL"].to_json %>
+<% end %>
+test:
+  <<: *default
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost").to_json %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 55432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "athenas").to_json %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "example").to_json %>
+  database: athenas_test
+<% if ENV["TEST_DATABASE_URL"].present? %>
+  url: <%= ENV["TEST_DATABASE_URL"].to_json %>
+<% end %>
+production:
+  <<: *default
+  host: <%= ENV.fetch("POSTGRES_HOST").to_json %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER").to_json %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD").to_json %>
+  database: athenas_production

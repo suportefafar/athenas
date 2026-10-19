@@ -67,3 +67,11 @@ yarn-debug.log*
 /storage/*
 !/storage/.keep
 /public/uploads
+
+# Private environment, credentials, backups and local caches
+.env.*
+!.env.example
+!.env.production.example
+/backups/
+/config/credentials*.yml.enc
+__pycache__/

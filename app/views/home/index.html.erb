@@ -1,0 +1,10 @@
+<section class="hero">
+  <p class="eyebrow">SEU ACERVO, UMA BUSCA</p>
+  <h1>Encontre a informação<br>que você precisa.</h1>
+  <p>Pesquise palavras em todos os lotes do Athenas.</p>
+  <%= render "shared/search" %>
+</section>
+<section class="popular">
+  <h2>Mais acessados nos últimos 30 dias</h2>
+  <% if @lots.any? %><%= render "shared/lots", lots: @lots %><% else %><p class="empty">Os documentos mais consultados aparecerão aqui. Comece enviando um arquivo ou fazendo uma pesquisa.</p><% end %>
+</section>

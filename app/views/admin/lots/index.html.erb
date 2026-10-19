@@ -1,0 +1,3 @@
+<h1>Todos os lotes</h1>
+<%= render "shared/lots", lots: @lots %>
+<%= render "shared/pagination", page: @page, pages: (@total / 20.0).ceil %>

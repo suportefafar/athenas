@@ -1,0 +1,6 @@
+<%= render "shared/search", query: @query %>
+<h1>Resultados da pesquisa</h1>
+<% if @result.warning %><p class="flash alert" role="status"><%= @result.warning %></p><% end %>
+<p class="metadata"><%= @result.mode == :semantic ? "Resultados por similaridade semântica" : "Resultados por palavras" %> · <%= @result.total %> lote(s) encontrado(s)</p>
+<% if @result.lots.any? %><%= render "shared/lots", lots: @result.lots %><% elsif !@result.warning %><p class="empty">Nenhum lote encontrado. Tente outras palavras ou uma expressão mais específica.</p><% end %>
+<%= render "shared/pagination", page: @result.page, pages: @result.pages %>

@@ -1,0 +1,14 @@
+name: Testes
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose build web
+      - run: docker compose up -d db
+      - run: docker compose run --rm -e RAILS_ENV=test -e RUN_EXTRACTION_TESTS=1 web bin/rails db:create db:migrate
+      - run: docker compose run --rm -e RAILS_ENV=test -e RUN_EXTRACTION_TESTS=1 web bin/rails test
+      - run: docker compose run --rm web bin/rails zeitwerk:check
+      - run: docker compose run --rm web bundle exec brakeman --no-pager

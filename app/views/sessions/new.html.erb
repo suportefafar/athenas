@@ -1,0 +1,9 @@
+<section class="narrow">
+  <h1>Entre no Athenas</h1><p>Consulte o repositório compartilhado da sua equipe.</p>
+  <%= form_with url: session_path do |form| %>
+    <%= form.label :email_address, "E-mail" %><%= form.email_field :email_address, required: true, autocomplete: "username" %>
+    <%= form.label :password, "Senha" %><%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
+    <%= form.submit "Entrar" %>
+  <% end %>
+  <p class="metadata">Precisa de uma conta? Solicite um convite ao administrador.</p>
+</section>
