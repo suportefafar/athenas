@@ -5,7 +5,7 @@
       <div class="metadata"><%= lot.content_type || "Tipo em validação" %> · Origem: upload · <%= l lot.created_at, format: :short %> · <%= number_to_human_size lot.byte_size %></div>
       <% if lot.page_count %><div class="metadata"><%= lot.page_count %> página(s)</div><% end %>
       <% if lot.metadata["autor_interno"].present? %><div class="metadata">Autor interno: <%= lot.metadata["autor_interno"] %></div><% end %>
-      <span class="badge <%= lot.status %>"><%= lot.status_label %></span>
+      <span class="ffds-badge <%= lot_status_class(lot.status) %>"><%= lot.status_label %></span>
     </li>
   <% end %>
 </ul>

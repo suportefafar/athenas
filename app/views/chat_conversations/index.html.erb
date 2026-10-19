@@ -1,14 +1,14 @@
 <div class="chat-layout">
-  <aside class="chat-sidebar" aria-label="Conversas">
+  <aside class="chat-sidebar ffds-card" aria-label="Conversas">
     <div class="chat-sidebar-head">
       <h2>Conversas</h2>
-      <%= button_to "Nova conversa", chat_conversations_path, class: "chat-new" %>
+      <%= button_to "Nova conversa", chat_conversations_path, class: "ffds-btn ffds-btn-sm ffds-btn-outline-primary chat-new" %>
     </div>
     <% if @conversations.any? %>
       <ul class="chat-conversation-list">
         <% @conversations.each do |conversation| %>
           <li><%= link_to conversation.title, root_path(conversation_id: conversation.id),
-            class: (conversation == @conversation ? "active" : nil),
+            class: "ffds-sidebar-link #{'ffds-active' if conversation == @conversation}",
             aria: { current: (conversation == @conversation ? "page" : nil) } %></li>
         <% end %>
       </ul>
@@ -21,7 +21,7 @@
     <% if @messages.empty? %>
       <div class="chat-welcome">
         <p class="eyebrow">PERGUNTE AO ACERVO</p>
-        <h1>O que você quer saber?</h1>
+        <h1 class="ffds-h1">O que você quer saber?</h1>
         <p>Faça perguntas sobre os documentos, peça um relatório ou encontre arquivos por palavras-chave. As respostas trazem links para as fontes usadas.</p>
         <p class="metadata">Exemplos: “Quais documentos mencionam orçamento?” · “Resuma os projetos de extensão” · “Como as entidades citadas se relacionam?”</p>
       </div>
@@ -30,13 +30,13 @@
         <% @messages.each do |message| %>
           <li class="chat-message <%= message.role %>"<% if message == @messages.last && message.role == "assistant" %> id="ultima-resposta"<% end %>>
             <p class="chat-message-label"><%= message.role == "user" ? "Você" : "Athenas" %></p>
-            <div class="chat-bubble"><%= message.content %></div>
+            <div class="chat-bubble ffds-card"><%= message.content %></div>
             <% if message.tool_name == "search_files" && message.tool_query.present? %>
               <p class="chat-tool"><%= link_to "Pesquisa realizada: #{message.tool_query}", search_path(q: message.tool_query) %>
                 <% if message.search_mode == "semantic" %> · por similaridade<% end %></p>
             <% end %>
             <% if message.sources.any? %>
-              <div class="chat-sources">
+              <div class="chat-sources ffds-card">
                 <strong>Fontes consultadas</strong>
                 <ol>
                   <% message.sources.each do |source| %>
@@ -58,14 +58,14 @@
       </ol>
     <% end %>
 
-    <%= form_with url: chat_messages_path, method: :post, class: "chat-form" do |form| %>
+    <%= form_with url: chat_messages_path, method: :post, class: "chat-form ffds-card" do |form| %>
       <%= form.hidden_field :conversation_id, value: @conversation&.id %>
-      <%= form.label :content, "Sua pergunta" %>
+      <%= form.label :content, "Sua pergunta", class: "ffds-form-label" %>
       <%= form.text_area :content, rows: 3, maxlength: 2_000, required: true,
-        placeholder: "Pergunte sobre os documentos ou peça para encontrar arquivos…" %>
+        placeholder: "Pergunte sobre os documentos ou peça para encontrar arquivos…", class: "ffds-form-control" %>
       <div class="chat-form-footer">
         <p>Confira as fontes antes de usar uma resposta em decisões ou relatórios.</p>
-        <%= form.submit "Perguntar", data: { turbo_submits_with: "Consultando o acervo…" } %>
+        <%= form.submit "Perguntar", class: "ffds-btn ffds-btn-primary", data: { turbo_submits_with: "Consultando o acervo…" } %>
       </div>
     <% end %>
   </section>

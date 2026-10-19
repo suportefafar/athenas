@@ -1,8 +1,8 @@
-<section class="narrow"><h1>Defina sua senha</h1><p>Olá, <%= @user.name %>. Use pelo menos 12 caracteres.</p>
-  <% if @user.errors.any? %><p role="alert"><%= @user.errors.full_messages.join(". ") %></p><% end %>
+<section class="narrow ffds-card ffds-card-accent"><div class="ffds-card-body"><h1 class="ffds-h1">Defina sua senha</h1><p>Olá, <%= @user.name %>. Use pelo menos 12 caracteres.</p>
+  <% if @user.errors.any? %><p class="ffds-alert ffds-alert-danger" role="alert"><%= @user.errors.full_messages.join(". ") %></p><% end %>
   <%= form_with url: invitation_path(params[:token]), method: :patch do |form| %>
-    <%= form.label :password, "Nova senha" %><%= form.password_field :password, required: true, minlength: 12, maxlength: 72, autocomplete: "new-password" %>
-    <%= form.label :password_confirmation, "Confirme a senha" %><%= form.password_field :password_confirmation, required: true, minlength: 12, maxlength: 72, autocomplete: "new-password" %>
-    <%= form.submit "Salvar senha" %>
+    <%= form.label :password, "Nova senha", class: "ffds-form-label" %><%= form.password_field :password, required: true, minlength: 12, maxlength: 72, autocomplete: "new-password", class: "ffds-form-control" %>
+    <%= form.label :password_confirmation, "Confirme a senha", class: "ffds-form-label" %><%= form.password_field :password_confirmation, required: true, minlength: 12, maxlength: 72, autocomplete: "new-password", class: "ffds-form-control" %>
+    <%= form.submit "Salvar senha", class: "ffds-btn ffds-btn-primary" %>
   <% end %>
-</section>
+</div></section>

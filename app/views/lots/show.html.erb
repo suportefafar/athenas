@@ -1,7 +1,7 @@
-<h1 class="document-title"><%= @lot.name %></h1>
-<p><span class="badge <%= @lot.status %>"><%= @lot.status_label %></span></p>
-<% if @lot.status == "partial" %><div class="flash alert"><strong>Indexação incompleta.</strong> Parte do conteúdo ou dos embeddings pode não estar pesquisável.</div><% end %>
-<% if @lot.processing_error.present? %><p role="alert"><%= @lot.processing_error %></p><% end %>
+<h1 class="document-title ffds-h1"><%= @lot.name %></h1>
+<p><span class="ffds-badge <%= lot_status_class(@lot.status) %>"><%= @lot.status_label %></span></p>
+<% if @lot.status == "partial" %><div class="ffds-alert ffds-alert-warning"><strong>Indexação incompleta.</strong> Parte do conteúdo ou dos embeddings pode não estar pesquisável.</div><% end %>
+<% if @lot.processing_error.present? %><p class="ffds-alert ffds-alert-danger" role="alert"><%= @lot.processing_error %></p><% end %>
 <% if @lot.processing_warnings.any? %><ul><% @lot.processing_warnings.each do |warning| %><li><%= warning %></li><% end %></ul><% end %>
 <dl class="details">
   <dt>Tipo</dt><dd><%= @lot.content_type %></dd>
@@ -12,6 +12,6 @@
   <% if @lot.page_count %><dt>Páginas</dt><dd><%= @lot.page_count %></dd><% end %>
   <% @lot.metadata.each do |key, value| %><dt><%= key.humanize %></dt><dd><%= value %></dd><% end %>
 </dl>
-<div class="actions"><%= link_to "Baixar original", download_lot_path(@lot), class: "button", data: { turbo: false } %>
-<% if @lot.previewable? %><%= link_to "Pré-visualizar", preview_lot_path(@lot), target: "_blank", rel: "noopener", data: { turbo: false } %><% end %>
-<% if @lot.deletable_by?(current_user) %><%= button_to "Excluir lote", lot_path(@lot), method: :delete, class: "danger", form: { data: { turbo_confirm: "Excluir este lote e seu arquivo original? Esta ação não pode ser desfeita." } } %><% end %></div>
+<div class="actions"><%= link_to "Baixar original", download_lot_path(@lot), class: "ffds-btn ffds-btn-primary", data: { turbo: false } %>
+<% if @lot.previewable? %><%= link_to "Pré-visualizar", preview_lot_path(@lot), class: "ffds-btn ffds-btn-outline-primary", target: "_blank", rel: "noopener", data: { turbo: false } %><% end %>
+<% if @lot.deletable_by?(current_user) %><%= button_to "Excluir lote", lot_path(@lot), method: :delete, class: "ffds-btn ffds-btn-danger", form: { data: { turbo_confirm: "Excluir este lote e seu arquivo original? Esta ação não pode ser desfeita." } } %><% end %></div>

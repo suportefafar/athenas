@@ -1,9 +1,9 @@
-<section class="narrow"><h1>Enviar arquivos</h1>
-  <p class="flash">Os arquivos enviados poderão ser consultados por todos os usuários do Athenas</p>
+<section class="narrow ffds-card ffds-card-accent"><div class="ffds-card-body"><h1 class="ffds-h1">Enviar arquivos</h1>
+  <p class="ffds-alert ffds-alert-info">Os arquivos enviados poderão ser consultados por todos os usuários do Athenas</p>
   <p>Até <strong>10 MB por arquivo</strong> e <strong>100 páginas</strong> por documento paginado. Cada arquivo será um lote independente.</p>
   <p>A validação de páginas e a indexação acontecem em segundo plano. Você receberá um e-mail ao terminar.</p>
   <%= form_with url: uploads_path, multipart: true do |form| %>
-    <%= form.label :files, "Selecione um ou mais arquivos" %><%= form.file_field :files, multiple: true, required: true %>
-    <%= form.submit "Enviar arquivos" %>
+    <%= form.label :files, "Selecione um ou mais arquivos", class: "ffds-form-label" %><%= form.file_field :files, multiple: true, required: true, class: "ffds-form-control" %>
+    <%= form.submit "Enviar arquivos", class: "ffds-btn ffds-btn-primary" %>
   <% end %>
-</section>
+</div></section>

@@ -7,28 +7,30 @@
     <link rel="icon" type="image/png" href="/icon.png">
     <link rel="apple-touch-icon" href="/icon.png">
     <link rel="manifest" href="<%= pwa_manifest_path %>">
+    <link rel="stylesheet" href="/__design-system/dist/latest/farmacia-ds.min.css" data-turbo-track="reload">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body>
-    <header class="header">
+  <body class="ffds-root">
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <header class="header ffds-navbar">
       <%= link_to root_path, class: "brand", "aria-label": "Athenas — início" do %>
         <%= image_tag "athenas-logo.png", alt: "Athenas", class: "brand-logo" %>
       <% end %>
       <% if current_user %>
-        <nav aria-label="Navegação principal">
-          <%= link_to "Chat", root_path %>
-          <%= link_to "Pesquisar arquivos", search_path %>
-          <%= link_to "Enviar arquivos", new_upload_path %>
-          <%= link_to "Meus uploads", my_uploads_path %>
-          <% if current_user.admin? %><%= link_to "Usuários", admin_users_path %><%= link_to "Todos os lotes", admin_lots_path %><% end %>
-          <span><%= current_user.name %></span>
-          <%= button_to "Sair", session_path, method: :delete, class: "subtle" %>
+        <nav class="site-nav" aria-label="Navegação principal">
+          <%= link_to "Chat", root_path, class: "ffds-nav-link #{'ffds-active' if current_page?(root_path)}" %>
+          <%= link_to "Pesquisar arquivos", search_path, class: "ffds-nav-link #{'ffds-active' if current_page?(search_path)}" %>
+          <%= link_to "Enviar arquivos", new_upload_path, class: "ffds-nav-link #{'ffds-active' if current_page?(new_upload_path)}" %>
+          <%= link_to "Meus uploads", my_uploads_path, class: "ffds-nav-link #{'ffds-active' if current_page?(my_uploads_path)}" %>
+          <% if current_user.admin? %><%= link_to "Usuários", admin_users_path, class: "ffds-nav-link #{'ffds-active' if current_page?(admin_users_path)}" %><%= link_to "Todos os lotes", admin_lots_path, class: "ffds-nav-link #{'ffds-active' if current_page?(admin_lots_path)}" %><% end %>
+          <span class="site-user"><%= current_user.name %></span>
+          <%= button_to "Sair", session_path, method: :delete, class: "ffds-btn ffds-btn-sm ffds-btn-ghost site-logout" %>
         </nav>
       <% end %>
     </header>
-    <main class="container">
-      <% flash.each do |kind, message| %><div class="flash <%= kind %>" role="status"><%= message %></div><% end %>
+    <main id="conteudo" class="container" tabindex="-1">
+      <% flash.each do |kind, message| %><div class="ffds-alert <%= kind == 'alert' ? 'ffds-alert-warning' : 'ffds-alert-info' %>" role="status"><%= message %></div><% end %>
       <%= yield %>
     </main>
     <footer>Athenas · Converse e pesquise no acervo compartilhado</footer>

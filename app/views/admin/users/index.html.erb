@@ -1,11 +1,11 @@
-<h1>Usuários</h1>
-<section class="narrow align-left"><h2>Cadastrar usuário</h2>
-  <% if @user.errors.any? %><p role="alert"><%= @user.errors.full_messages.join(". ") %></p><% end %>
+<h1 class="ffds-h1">Usuários</h1>
+<section class="narrow align-left ffds-card ffds-card-accent"><div class="ffds-card-body"><h2>Cadastrar usuário</h2>
+  <% if @user.errors.any? %><p class="ffds-alert ffds-alert-danger" role="alert"><%= @user.errors.full_messages.join(". ") %></p><% end %>
   <%= form_with model: @user, url: admin_users_path do |form| %>
-    <%= form.label :name, "Nome" %><%= form.text_field :name, required: true, maxlength: 150 %>
-    <%= form.label :email_address, "E-mail" %><%= form.email_field :email_address, required: true %>
-    <%= form.submit "Criar e enviar convite" %>
+    <%= form.label :name, "Nome", class: "ffds-form-label" %><%= form.text_field :name, required: true, maxlength: 150, class: "ffds-form-control" %>
+    <%= form.label :email_address, "E-mail", class: "ffds-form-label" %><%= form.email_field :email_address, required: true, class: "ffds-form-control" %>
+    <%= form.submit "Criar e enviar convite", class: "ffds-btn ffds-btn-primary" %>
   <% end %><p class="metadata">O convite permite definir a senha e expira em 48 horas.</p>
-</section>
+</div></section>
 <ul class="lots"><% @users.each do |user| %><li><strong><%= user.name %></strong> · <%= user.email_address %> · <%= user.admin? ? "Administrador" : "Usuário" %><% if user.invited? %> · Convite pendente<% end %>
-<% unless user.admin? %><%= button_to "Reenviar convite", invite_admin_user_path(user), method: :post, class: "subtle" %><% end %></li><% end %></ul>
+<% unless user.admin? %><%= button_to "Reenviar convite", invite_admin_user_path(user), method: :post, class: "ffds-btn ffds-btn-sm ffds-btn-outline-primary" %><% end %></li><% end %></ul>
