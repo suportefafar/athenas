@@ -43,6 +43,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   gap: var(--space-6);
   padding: var(--space-3) max(24px, calc((100vw - 1260px) / 2));
   min-height: 88px;
+  background: var(--color-white);
+  color: var(--color-secondary-dark);
 }
 .brand {
   position: relative;
@@ -51,7 +53,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   width: 220px;
   height: 54px;
   overflow: hidden;
-  background: var(--color-white);
+  background: transparent;
   border-radius: var(--radius-md);
 }
 .brand-logo {
@@ -73,21 +75,23 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .site-nav .ffds-nav-link {
   padding: var(--space-2);
   border-radius: var(--radius-md);
+  color: var(--color-gray-700);
   text-decoration: none;
   white-space: nowrap;
 }
 .site-nav .ffds-nav-link:hover, .site-nav .ffds-nav-link.ffds-active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-primary-10);
+  color: var(--color-secondary-dark);
 }
 .site-nav form { margin: 0; }
 .site-user {
   margin-left: var(--space-3);
-  color: var(--color-gray-300);
+  color: var(--color-gray-600);
   font-size: var(--text-sm);
   white-space: nowrap;
 }
-.site-logout.ffds-btn { color: var(--color-primary); }
-.site-logout.ffds-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.site-logout.ffds-btn { color: var(--color-gray-700); }
+.site-logout.ffds-btn:hover { background: var(--color-gray-100); }
 
 .container {
   width: min(100% - 48px, 1260px);
