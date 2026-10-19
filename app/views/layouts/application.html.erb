@@ -4,12 +4,17 @@
     <title>Athenas — busca de documentos</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %><%= csp_meta_tag %>
+    <link rel="icon" type="image/png" href="/icon.png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
   <body>
     <header class="header">
-      <%= link_to "Athenas", root_path, class: "brand" %>
+      <%= link_to root_path, class: "brand", "aria-label": "Athenas — início" do %>
+        <%= image_tag "athenas-logo.png", alt: "Athenas", class: "brand-logo" %>
+      <% end %>
       <% if current_user %>
         <nav aria-label="Navegação principal">
           <%= link_to "Enviar arquivos", new_upload_path %>

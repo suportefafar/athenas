@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root "home#index"
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest, defaults: { format: :json }
   resource :session, only: %i[new create destroy]
   get "invitation/:token", to: "invitations#edit", as: :invitation
   patch "invitation/:token", to: "invitations#update"
