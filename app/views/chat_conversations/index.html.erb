@@ -34,7 +34,7 @@
                 <p class="chat-message-label"><%= message.role == "user" ? "Você" : "Athenas" %></p>
                 <time class="chat-message-time" datetime="<%= message.created_at.iso8601 %>"><%= l(message.created_at, format: "%d/%m/%Y %H:%M") %></time>
               </div>
-              <div class="chat-bubble ffds-card"><%= message.content %></div>
+              <div class="chat-bubble ffds-card <%= 'chat-assistant-content' if message.role == 'assistant' %>"><%= message.role == "assistant" ? render_chat_markdown(message.content) : message.content %></div>
               <% if message.tool_name == "search_files" && message.tool_query.present? %>
                 <p class="chat-tool"><%= link_to "Pesquisa realizada: #{message.tool_query}", search_path(q: message.tool_query) %>
                   <% if message.search_mode == "semantic" %> · por similaridade<% end %></p>

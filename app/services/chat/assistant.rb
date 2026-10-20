@@ -146,10 +146,14 @@ module Chat
     end
 
     def content_text(content)
-      return content if content.is_a?(String)
-      return content.filter_map { |part| part["text"] if part.is_a?(Hash) }.join if content.is_a?(Array)
-
-      ""
+      text = if content.is_a?(String)
+        content
+      elsif content.is_a?(Array)
+        content.filter_map { |part| part["text"] if part.is_a?(Hash) }.join
+      else
+        ""
+      end
+      text.gsub(/<tool_call\b[^>]*>.*?(?:<\/tool_call\s*>|\z)/im, "").strip
     end
   end
 end
