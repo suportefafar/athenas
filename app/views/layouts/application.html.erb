@@ -11,7 +11,7 @@
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="ffds-root">
+  <body class="ffds-root <%= 'chat-page' if controller_name == 'chat_conversations' %>">
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
     <header class="header ffds-navbar">
       <%= link_to root_path, class: "brand", "aria-label": "Athenas — início" do %>
@@ -29,7 +29,7 @@
         </nav>
       <% end %>
     </header>
-    <main id="conteudo" class="container" tabindex="-1">
+    <main id="conteudo" class="container <%= 'chat-page-container' if controller_name == 'chat_conversations' %>" tabindex="-1">
       <% flash.each do |kind, message| %><div class="ffds-alert <%= kind == 'alert' ? 'ffds-alert-warning' : 'ffds-alert-info' %>" role="status"><%= message %></div><% end %>
       <%= yield %>
     </main>
