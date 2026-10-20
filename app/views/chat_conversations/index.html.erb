@@ -18,7 +18,7 @@
   </aside>
 
   <section class="chat-main" aria-label="Chat com o acervo">
-    <div class="chat-history">
+    <div class="chat-history" data-chat-history>
       <% if @messages.empty? %>
         <div class="chat-welcome">
           <p class="eyebrow">PERGUNTE AO ACERVO</p>
@@ -30,7 +30,10 @@
         <ol class="chat-messages">
           <% @messages.each do |message| %>
             <li class="chat-message <%= message.role %>"<% if message == @messages.last && message.role == "assistant" %> id="ultima-resposta"<% end %>>
-              <p class="chat-message-label"><%= message.role == "user" ? "Você" : "Athenas" %></p>
+              <div class="chat-message-meta">
+                <p class="chat-message-label"><%= message.role == "user" ? "Você" : "Athenas" %></p>
+                <time class="chat-message-time" datetime="<%= message.created_at.iso8601 %>"><%= l(message.created_at, format: "%d/%m/%Y %H:%M") %></time>
+              </div>
               <div class="chat-bubble ffds-card"><%= message.content %></div>
               <% if message.tool_name == "search_files" && message.tool_query.present? %>
                 <p class="chat-tool"><%= link_to "Pesquisa realizada: #{message.tool_query}", search_path(q: message.tool_query) %>
