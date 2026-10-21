@@ -108,4 +108,17 @@ class ExtractionTest < ActiveSupport::TestCase
     assert_equal chunks.first.split.last(60), chunks[1].split.first(60)
     assert_empty Lots::Chunker.new.call("")
   end
+
+  test "extração preserva marcadores reais de página e alinhamento de tabelas" do
+    runner = mock_runner(pages: 2)
+    original_call = runner.method(:call)
+    runner.define_singleton_method(:call) do |program, *args, **options|
+      program == "pdftotext" ? "Comissão       Início       Fim\nÉtica          2025         2027" : original_call.call(program, *args, **options)
+    end
+    result = extract(pdf_document, name: "tabela.pdf", runner: runner)
+    assert_includes result.text, "[Página 1]"
+    assert_includes result.text, "[Página 2]"
+    assert_includes result.text, "Ética          2025         2027"
+    assert_includes Lots::Chunker.new.call(result.text).first, "Comissão       Início"
+  end
 end

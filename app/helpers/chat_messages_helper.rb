@@ -6,6 +6,11 @@ module ChatMessagesHelper
     safe_join(blocks.map { |type, value| render_chat_markdown_block(type, value) })
   end
 
+  def chat_source_coverage(source)
+    { "full_text" => "texto completo disponível", "full_text_analyzed_in_parts" => "texto analisado por partes",
+      "excerpts" => "trechos consultados", "partial" => "leitura parcial", "unavailable" => "texto indisponível" }[source["coverage"]]
+  end
+
   private
 
   def clean_chat_model_artifacts(content)
@@ -96,7 +101,7 @@ module ChatMessagesHelper
 
   def chat_markdown_list_type(line)
     return :ordered if line.match?(/^\s*\d+[.)]\s+/)
-    return :unordered if line.match?(/^\s*[-*+]\s+/)
+    :unordered if line.match?(/^\s*[-*+]\s+/)
   end
 
   def chat_markdown_rule?(line)

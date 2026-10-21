@@ -11,85 +11,116 @@ class ChatAssistantTest < ActiveSupport::TestCase
 
     def call(**arguments)
       @requests << arguments
-      @responses.shift
+      @responses.shift || raise("Resposta não prevista")
     end
   end
 
-  class FakeRetrieval
-    attr_reader :requests
+  test "pesquisa o livro pelo nome e analisa o texto completo mesmo sem embeddings" do
+    lot = create_lot(name: "Bitcoin para programadores.pdf", extracted_text: "Introdução\n#{'explicação ' * 200}\nÚltima seção: carteiras e assinaturas.")
+    client = FakeClient.new(plan("Bitcoin"), answer("O livro explica carteiras e assinaturas [1]."))
 
-    def initialize(result)
-      @result = result
-      @requests = []
+    result = Chat::Assistant.new(client: client).call(prompt: "E o livro sobre BTC? Me dê um resumo dele")
+
+    assert_equal [ lot.id ], result.sources.map { |source| source["lot_id"] }
+    assert_equal "full_text", result.sources.first["coverage"]
+    assert_includes client.requests.last[:messages].last[:content], "Última seção: carteiras e assinaturas."
+    assert_includes result.answer, "assinaturas"
+    assert client.requests.none? { |request| request.key?(:tools) }
+  end
+
+  test "consulta pelo nome traz todos os relatórios e fontes sem duplicação" do
+    10.times { |i| create_lot(name: "Ana Silva (#{i}).pdf", extracted_text: "Relatório #{i}: coordenadora do laboratório desde 2016.") }
+    client = FakeClient.new(plan("Ana Silva"), answer("A coordenação começou em 2016 [1]."))
+    result = Chat::Assistant.new(client: client).call(prompt: "Quais laboratórios Ana Silva coordenou?")
+    assert_equal 10, result.sources.size
+    assert_equal 10, result.sources.map { |source| source["lot_id"] }.uniq.size
+    assert_includes client.requests.last[:messages].last[:content], "Relatório 9"
+  end
+
+  test "localização de arquivos não inicia análise de conteúdo" do
+    create_lot(name: "Orçamento.pdf", extracted_text: "Texto que só deve ser lido para análise")
+    client = FakeClient.new(plan("Orçamento", intent: "search"), answer("Encontrei Orçamento.pdf [1]."))
+    result = Chat::Assistant.new(client: client).call(prompt: "Encontre arquivos de orçamento")
+    assert_equal "excerpts", result.sources.first["coverage"]
+    assert_equal 2, client.requests.size
+  end
+
+  test "reformula consulta vazia antes de desistir" do
+    lot = create_lot(name: "Bitcoin.pdf", extracted_text: "Blocos e transações")
+    search = Object.new
+    queries = []
+    search.define_singleton_method(:call) do |query|
+      queries << query
+      { query: query, mode: "lexical", total: query == "Bitcoin" ? 1 : 0,
+        documents: query == "Bitcoin" ? [ { lot_id: lot.id, title: lot.name } ] : [] }
     end
-
-    def call(query, **options)
-      @requests << [ query, options ]
-      @result
-    end
+    client = FakeClient.new(plan("BTC"), plan("Bitcoin"), answer("Blocos e transações [1]."))
+    result = Chat::Assistant.new(client: client, file_search: search).call(prompt: "Resuma o livro de BTC")
+    assert_equal [ "BTC", "Bitcoin" ], queries
+    assert_equal lot.id, result.sources.first["lot_id"]
+    assert_includes client.requests[1][:messages].last[:content], "Pesquisas anteriores"
   end
 
-  test "usa a pesquisa existente quando o modelo pede arquivos por palavra" do
-    client = FakeClient.new(
-      { "role" => "assistant", "content" => nil, "tool_calls" => [ tool_call("search_files", "orçamento") ] },
-      { "role" => "assistant", "content" => "Encontrei o orçamento no documento [1]." }
-    )
-    search = Minitest::Mock.new
-    search.expect(:call, { mode: "lexical", query: "orçamento", total: 1,
-      documents: [ { reference: 1, lot_id: 42, title: "Orçamento.pdf", excerpt: "Orçamento anual" } ] }, [ "orçamento" ])
-
-    result = Chat::Assistant.new(client: client, file_search: search).call(prompt: "Encontre arquivos sobre orçamento")
-
-    assert_equal "search_files", result.tool_name
-    assert_equal "orçamento", result.tool_query
-    assert_equal 42, result.sources.first["lot_id"]
-    assert_equal "Encontrei o orçamento no documento [1].", result.answer
-    assert_equal "tool", client.requests.last[:messages].last[:role]
-    search.verify
-  end
-
-  test "recupera trechos para uma pergunta analítica" do
-    client = FakeClient.new(
-      { "role" => "assistant", "content" => nil, "tool_calls" => [ tool_call("retrieve_excerpts", "relação entre entidades") ] },
-      { "role" => "assistant", "content" => "As entidades aparecem juntas no trecho [1]." }
-    )
-    retrieval = Minitest::Mock.new
-    retrieval.expect(:call, { mode: "semantic", query: "relação entre entidades",
-      documents: [ { reference: 1, lot_id: 7, title: "Ata.txt", position: 2, excerpt: "Entidade A e B" } ] }, [ "relação entre entidades" ])
-
-    result = Chat::Assistant.new(client: client, retrieval: retrieval).call(prompt: "Qual a relação entre as entidades?")
-
-    assert_equal "retrieve_excerpts", result.tool_name
-    assert_equal 2, result.sources.first["position"]
-    assert_equal "As entidades aparecem juntas no trecho [1].", result.answer
-    retrieval.verify
-  end
-
-  test "resumo de essa fonte recupera o documento da resposta anterior" do
-    client = FakeClient.new({ "role" => "assistant", "content" => "Resumo dos trechos do documento [1]." })
-    retrieval = FakeRetrieval.new(mode: "document", query: "Sobre o que essa fonte trata? Resuma em dois parágrafos",
-      documents: [ { reference: 1, lot_id: 42, title: "Bitcoin.pdf",
-        excerpts: [ { position: 1, text: "Introdução ao Bitcoin" } ] } ])
-    history = [
-      ChatMessage.new(role: "user", content: "Quais documentos falam de BTC?"),
-      ChatMessage.new(role: "assistant", content: "Encontrei Bitcoin.pdf [1].",
-        sources: [ { "reference" => 1, "lot_id" => 42, "title" => "Bitcoin.pdf" } ]),
-      ChatMessage.new(role: "user", content: "Sobre o que essa fonte trata?"),
-      ChatMessage.new(role: "assistant", content: "Não encontrei evidências suficientes.")
-    ]
-
-    result = Chat::Assistant.new(client: client, retrieval: retrieval).call(
-      prompt: "Sobre o que essa fonte trata? Resuma em dois parágrafos", history: history)
-
-    assert_equal [ [ "Sobre o que essa fonte trata? Resuma em dois parágrafos", { lot_id: 42, overview: true } ] ], retrieval.requests
+  test "essa fonte e dele reabrem o documento anterior sem novo planejamento" do
+    lot = create_lot(name: "Bitcoin.pdf", extracted_text: "Texto completo sobre carteiras")
+    client = FakeClient.new(answer("Resumo [1]."))
+    history = [ ChatMessage.new(role: "assistant", content: "Encontrei [1].",
+      sources: [ { "reference" => 1, "lot_id" => lot.id, "title" => lot.name } ]) ]
+    result = Chat::Assistant.new(client: client).call(prompt: "Me dê um resumo dele", history: history)
     assert_equal 1, client.requests.size
-    assert_equal 42, result.sources.first["lot_id"]
-    assert_equal "Resumo dos trechos do documento [1].", result.answer
+    assert_equal lot.id, result.sources.first["lot_id"]
+    assert_includes client.requests.last[:messages].last[:content], "Texto completo"
+  end
+
+  test "cada documento usa todas as fontes anteriores" do
+    lots = 2.times.map { |i| create_lot(name: "Relatório #{i}.pdf", extracted_text: "Ensino e pesquisa") }
+    history = [ ChatMessage.new(role: "assistant", content: "Duas fontes", sources: lots.each_with_index.map { |lot, i| { "reference" => i + 1, "lot_id" => lot.id, "title" => lot.name } }) ]
+    client = FakeClient.new(answer("Estimativa temática: ensino 50%, pesquisa 50% [1][2]."))
+    result = Chat::Assistant.new(client: client).call(prompt: "Qual a porcentagem de assuntos em cada documento?", history: history)
+    assert_equal lots.map(&:id), result.sources.map { |source| source["lot_id"] }
+  end
+
+  test "catálogo inclui todos os documentos até o limite sem exigir termos" do
+    3.times { |i| create_lot(name: "Documento #{i}", extracted_text: "Assunto #{i}") }
+    response = { "content" => { intent: "analysis", queries: [], all_documents: true }.to_json }
+    client = FakeClient.new(response, answer("Distribuição estimada [1][2][3]."))
+    result = Chat::Assistant.new(client: client).call(prompt: "Analise os assuntos de todos os documentos do acervo")
+    assert_equal 3, result.sources.size
+  end
+
+  test "resposta com chamada textual de ferramenta é refeita sem exibir XML" do
+    create_lot(name: "Bitcoin.pdf", extracted_text: "Transações")
+    client = FakeClient.new(plan("Bitcoin"), answer("Vou recuperar <tool_call>não executado</tool_call>"), answer("Transações [1]."))
+    result = Chat::Assistant.new(client: client).call(prompt: "Resuma Bitcoin")
+    assert_equal "Transações [1].", result.answer
+    assert_equal 3, client.requests.size
+  end
+
+  test "pesquisa adicional após resposta sem evidência pode encontrar outro documento" do
+    first = create_lot(name: "Ana Silva.pdf", extracted_text: "Dados cadastrais")
+    second = create_lot(name: "Portaria de coordenação.pdf", extracted_text: "Ana Silva coordena o laboratório de Alimentos desde 2020")
+    searches = []
+    search = Object.new
+    search.define_singleton_method(:call) do |query|
+      searches << query
+      lot = query == "Ana Silva" ? first : second
+      { query: query, mode: "lexical", total: 1, documents: [ { lot_id: lot.id, title: lot.name } ] }
+    end
+    client = FakeClient.new(plan("Ana Silva"), answer("Não localizei a coordenação no texto disponível [1]."),
+      plan("Portaria coordenação"), answer("Laboratório de Alimentos desde 2020 [2]."))
+    result = Chat::Assistant.new(client: client, file_search: search).call(prompt: "Quais laboratórios Ana Silva coordenou?")
+    assert_equal [ "Ana Silva", "Portaria coordenação" ], searches
+    assert_equal [ first.id, second.id ], result.sources.map { |source| source["lot_id"] }
+    assert_includes result.answer, "2020"
   end
 
   private
 
-  def tool_call(name, query)
-    { "id" => "tool-1", "type" => "function", "function" => { "name" => name, "arguments" => { query: query }.to_json } }
+  def plan(query, intent: "analysis")
+    { "content" => { intent: intent, queries: [ query ], all_documents: false }.to_json }
+  end
+
+  def answer(text)
+    { "role" => "assistant", "content" => text }
   end
 end

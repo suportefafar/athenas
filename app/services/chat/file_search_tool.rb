@@ -1,15 +1,18 @@
 module Chat
   class FileSearchTool
-    MAX_RESULTS = 8
+    MAX_RESULTS = 24
 
     def call(query)
       result = Search::Service.new.call(query)
       lots = result.lots.first(MAX_RESULTS)
+      if result.total > lots.size && lots.size < MAX_RESULTS
+        lots.concat(Search::Service.new.call(query, page: 2).lots.first(MAX_RESULTS - lots.size))
+      end
       snippets = matching_chunks(lots, query)
       {
         mode: result.mode.to_s,
         total: result.total,
-        warning: result.warning,
+        warning: [ result.warning, ("A pesquisa encontrou #{result.total} documentos; foram selecionados #{lots.size}. Refine a consulta para examinar os demais." if result.total > lots.size) ].compact.join(" ").presence,
         query: query,
         documents: lots.each_with_index.map do |lot, index|
           {
@@ -22,6 +25,14 @@ module Chat
           }
         end
       }
+    end
+
+    def catalog
+      scope = Lot.searchable.order(:id)
+      total = scope.count
+      { mode: "catalog", query: "", total: total,
+        warning: ("O acervo contém #{total} documentos; foram selecionados #{MAX_RESULTS}. Refine a consulta para examinar os demais." if total > MAX_RESULTS),
+        documents: scope.limit(MAX_RESULTS).map { |lot| { lot_id: lot.id, title: lot.name, pages: lot.page_count } } }
     end
 
     private

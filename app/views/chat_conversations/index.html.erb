@@ -52,6 +52,7 @@
                           <%= source["title"] %> <span class="metadata">(indisponível)</span>
                         <% end %>
                         <% if source["position"] %><span class="metadata">· trecho <%= source["position"] %></span><% end %>
+                        <% if chat_source_coverage(source) %><span class="metadata">· <%= chat_source_coverage(source) %></span><% end %>
                       </li>
                     <% end %>
                   </ol>

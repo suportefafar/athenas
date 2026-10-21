@@ -4,21 +4,19 @@ module Lots
     # Paragraph boundaries are preferred, large paragraphs are split safely.
     def call(text)
       chunks = []
-      words = []
-      text.split(/\n\s*\n/).each do |paragraph|
-        paragraph.split.each_slice(375) do |slice|
-          if words.size + slice.size > 375 && words.any?
-            chunks << words.join(" ")
-            words = words.last(60)
-          end
-          words.concat(slice)
-          while words.size > 375
-            chunks << words.first(375).join(" ")
-            words = words.drop(315)
-          end
+      # Keep the original whitespace: rows, columns and page markers are evidence.
+      words = text.scan(/\S+\s*/)
+      start = 0
+      while start < words.size
+        finish = [ start + 375, words.size ].min
+        if finish < words.size
+          paragraph_end = (start + 315...finish).to_a.reverse.find { |index| words[index].match?(/\n\s*\n/) }
+          finish = paragraph_end + 1 if paragraph_end
         end
+        chunks << words[start...finish].join.strip
+        break if finish == words.size
+        start = finish - 60
       end
-      chunks << words.join(" ") if words.any?
       chunks
     end
   end

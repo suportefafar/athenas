@@ -10,7 +10,10 @@ module Search
 
     def scope
       tsquery = "plainto_tsquery('public.athenas_portuguese', #{@query})"
-      Lot.searchable.where("search_vector @@ #{tsquery}")
+      # PostgreSQL treats Bitcoin.pdf as a hostname token. Also search a filename
+      # with separators expanded so a bare title can find an exact file match.
+      filename = "to_tsvector('public.athenas_portuguese', regexp_replace(name, '[._/\\-]+', ' ', 'g'))"
+      Lot.searchable.where("search_vector @@ #{tsquery} OR #{filename} @@ #{tsquery}")
         .order(Arel.sql("ts_rank(search_vector, #{tsquery}) DESC, lots.created_at DESC, lots.id DESC"))
     end
   end

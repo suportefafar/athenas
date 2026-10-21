@@ -12,12 +12,15 @@ module Chat
       return { mode: "document", query: query, documents: [] } if lot_id && !lot
       return document_overview(query, lot) if overview && lot
 
-      chunks = semantic_chunks(query, lot_id: lot_id)
-      mode = "semantic"
-      if chunks.empty?
-        chunks = lexical_chunks(query, lot_id: lot_id)
-        mode = "lexical"
-      end
+      lexical = lexical_chunks(query, lot_id: lot_id)
+      semantic = semantic_chunks(query, lot_id: lot_id)
+      # Reciprocal-rank fusion combines exact and semantic matches even when
+      # embeddings are incomplete. Neighbouring chunks preserve table context.
+      scores = Hash.new(0.0)
+      [ lexical, semantic ].each { |list| list.each_with_index { |chunk, index| scores[chunk.id] += 1.0 / (60 + index + 1) } }
+      ranked = (lexical + semantic).uniq(&:id).sort_by { |chunk| -scores[chunk.id] }.first(MAX_CHUNKS)
+      chunks = with_neighbors(ranked)
+      mode = lexical.any? && semantic.any? ? "hybrid" : (lexical.any? ? "lexical" : "semantic")
       {
         mode: mode,
         query: query,
@@ -27,7 +30,8 @@ module Chat
             lot_id: chunk.lot_id,
             title: chunk.lot.name,
             position: chunk.position + 1,
-            excerpt: chunk.text.first(1_250)
+            coverage: "excerpts",
+            excerpt: chunk.text
           }
         end
       }
@@ -51,7 +55,8 @@ module Chat
         documents: [ {
           reference: 1, lot_id: lot.id, title: lot.name, pages: lot.page_count,
           sampled_chunks: positions.size, total_chunks: chunks.size,
-          excerpts: positions.map { |index| { position: chunks[index].position + 1, text: chunks[index].text.first(1_000) } }
+          coverage: positions.size == chunks.size ? "full_chunks" : "excerpts",
+          excerpts: positions.map { |index| { position: chunks[index].position + 1, text: chunks[index].text } }
         } ]
       }
     end
@@ -67,8 +72,7 @@ module Chat
         .where("1 - (lot_chunks.embedding <=> #{quoted}::vector) >= ?", threshold)
         .order(Arel.sql("lot_chunks.embedding <=> #{quoted}::vector"))
         .limit(40).to_a
-      counts = Hash.new(0)
-      candidates.select { |chunk| (counts[chunk.lot_id] += 1) <= 3 }.first(MAX_CHUNKS)
+      candidates.first(MAX_CHUNKS)
     rescue Embeddings::OllamaClient::Unavailable
       []
     end
@@ -78,13 +82,27 @@ module Chat
       return [] unless lexical.searchable_terms?
 
       quoted = ApplicationRecord.connection.quote(query)
-      lots = lot_id ? [ lot_id ] : lexical.scope.limit(8).pluck(:id)
+      lots = lot_id ? Lot.searchable.where(id: lot_id).pluck(:id) : lexical.scope.limit(24).pluck(:id)
       return [] if lots.empty?
 
       LotChunk.includes(:lot).where(lot_id: lots)
         .where("to_tsvector('public.athenas_portuguese', text) @@ plainto_tsquery('public.athenas_portuguese', #{quoted})")
-        .select("DISTINCT ON (lot_chunks.lot_id) lot_chunks.*")
+        .order(Arel.sql("ts_rank(to_tsvector('public.athenas_portuguese', text), plainto_tsquery('public.athenas_portuguese', #{quoted})) DESC"))
         .order(:lot_id, :position).limit(MAX_CHUNKS).to_a
+    end
+
+    def with_neighbors(chunks)
+      return [] if chunks.empty?
+
+      ids = chunks.group_by(&:lot_id).flat_map do |id, matches|
+        positions = matches.flat_map { |chunk| [ chunk.position - 1, chunk.position, chunk.position + 1 ] }.select { |position| position >= 0 }.uniq
+        LotChunk.where(lot_id: id, position: positions).pluck(:id)
+      end
+      # A fixed context budget, without truncating individual evidence spans.
+      neighbors = LotChunk.includes(:lot).where(id: ids).order(:lot_id, :position).to_a
+      selected = chunks.dup
+      neighbors.each { |chunk| selected << chunk unless selected.any? { |item| item.id == chunk.id } }
+      selected.first(20).sort_by { |chunk| [ chunk.lot_id, chunk.position ] }
     end
   end
 end

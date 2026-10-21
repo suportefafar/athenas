@@ -94,7 +94,7 @@ module Lots
             extracted = ocr("#{prefix}.png", page)
             FileUtils.rm_f("#{prefix}.png")
           end
-          extracted
+          "[Página #{page}]\n#{extracted.delete("\f").strip}"
         rescue CommandRunner::Error
           @warnings << "Página #{page}: extração/OCR incompleto."
           ""
@@ -231,7 +231,8 @@ module Lots
     end
 
     def normalize(text)
-      text.to_s.encode("UTF-8", invalid: :replace, undef: :replace).delete("\0").gsub(/[ \t]+/, " ").gsub(/\n{3,}/, "\n\n").strip
+      text.to_s.encode("UTF-8", invalid: :replace, undef: :replace).delete("\0")
+        .gsub("\r\n", "\n").gsub(/[ \t]+\n/, "\n").gsub(/\n{3,}/, "\n\n").strip
     end
   end
 end

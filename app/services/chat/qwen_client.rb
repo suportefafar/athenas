@@ -23,6 +23,9 @@ module Chat
       uri = URI.join(@base.to_s.sub(%r{/+\z}, "") + "/", "chat/completions")
       request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "Authorization" => "Bearer #{@api_key}")
       payload = { model: @model, messages: messages, temperature: 0.1, max_tokens: max_tokens }
+      # The analysis pipeline requests an answer, not an unbounded hidden thought
+      # stream. In particular the planner must fit in its small output budget.
+      payload[:chat_template_kwargs] = { enable_thinking: false } if @model.downcase.include?("qwen")
       payload[:tools] = tools if tools
       payload[:tool_choice] = tool_choice if tool_choice
       request.body = JSON.generate(payload)
@@ -32,9 +35,12 @@ module Chat
       raise Unavailable, "O servidor do assistente não respondeu corretamente (HTTP #{response.code})." unless response.is_a?(Net::HTTPSuccess)
       raise Unavailable, "A resposta do assistente excedeu o limite." if response.body.bytesize > 2.megabytes
 
-      message = JSON.parse(response.body).dig("choices", 0, "message")
+      parsed = JSON.parse(response.body)
+      choice = parsed.dig("choices", 0)
+      message = choice&.dig("message")
       raise Unavailable, "O assistente retornou uma resposta inválida." unless message.is_a?(Hash)
-      message.slice("role", "content", "tool_calls")
+      raise Unavailable, "A análise excedeu o limite de saída. Reduza o escopo da pergunta." if choice["finish_reason"] == "length"
+      message.slice("role", "content", "tool_calls").merge("usage" => parsed["usage"], "finish_reason" => choice["finish_reason"])
     rescue IOError, SystemCallError, Timeout::Error, JSON::ParserError, NoMethodError
       raise Unavailable, "O servidor do assistente está indisponível no momento."
     end
