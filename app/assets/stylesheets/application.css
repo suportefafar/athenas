@@ -233,6 +233,11 @@ footer {
 .chat-markdown-table-scroll td { padding: var(--space-2) var(--space-3); border: 1px solid var(--border-color); text-align: left; vertical-align: top; }
 .chat-markdown-table-scroll th { background: var(--color-gray-100); }
 .chat-message.user .chat-bubble { background: var(--color-primary-10); border-color: var(--color-primary-20); }
+.chat-thinking { padding: var(--space-4) var(--space-5); color: var(--color-gray-600); animation: chat-thinking-fade 1.6s ease-in-out infinite; }
+@keyframes chat-thinking-fade { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+.chat-error.ffds-card { display: block; padding: var(--space-4) var(--space-5); border-color: #e7bcbc; color: #8c4545; }
+.chat-error p { margin: 0 0 var(--space-3); }
+@media (prefers-reduced-motion: reduce) { .chat-thinking { animation: none; } }
 .chat-tool { margin: var(--space-2) 0; font-size: var(--text-sm); }
 .chat-sources.ffds-card { display: block; padding: var(--space-4); margin-top: var(--space-3); font-size: var(--text-sm); }
 .chat-sources ol { list-style: none; margin: var(--space-2) 0 0; padding: 0; }

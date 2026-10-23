@@ -30,7 +30,7 @@
       <% end %>
     </header>
     <main id="conteudo" class="container <%= 'chat-page-container' if controller_name == 'chat_conversations' %>" tabindex="-1">
-      <% flash.each do |kind, message| %><div class="ffds-alert <%= kind == 'alert' ? 'ffds-alert-warning' : 'ffds-alert-info' %>" role="status"><%= message %></div><% end %>
+      <% flash.each do |kind, message| %><% next if %w[chat_error failed_prompt].include?(kind.to_s) %><div class="ffds-alert <%= kind == 'alert' ? 'ffds-alert-warning' : 'ffds-alert-info' %>" role="status"><%= message %></div><% end %>
       <%= yield %>
     </main>
     <footer>Athenas · Converse e pesquise no acervo compartilhado</footer>

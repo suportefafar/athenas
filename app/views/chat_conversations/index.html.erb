@@ -19,15 +19,15 @@
 
   <section class="chat-main" aria-label="Chat com o acervo">
     <div class="chat-history" data-chat-history>
-      <% if @messages.empty? %>
+      <% if @messages.empty? && !flash[:chat_error] %>
         <div class="chat-welcome">
           <p class="eyebrow">PERGUNTE AO ACERVO</p>
           <h1 class="ffds-h1">O que você quer saber?</h1>
           <p>Faça perguntas sobre os documentos, peça um relatório ou encontre arquivos por palavras-chave. As respostas trazem links para as fontes usadas.</p>
           <p class="metadata">Exemplos: “Quais documentos mencionam orçamento?” · “Resuma os projetos de extensão” · “Como as entidades citadas se relacionam?”</p>
         </div>
-      <% else %>
-        <ol class="chat-messages">
+      <% end %>
+        <ol class="chat-messages" data-chat-messages>
           <% @messages.each do |message| %>
             <li class="chat-message <%= message.role %>"<% if message == @messages.last && message.role == "assistant" %> id="ultima-resposta"<% end %>>
               <div class="chat-message-meta">
@@ -60,8 +60,19 @@
               <% end %>
             </li>
           <% end %>
+          <% if flash[:chat_error] %>
+            <% if flash[:failed_prompt].present? %>
+              <li class="chat-message user" data-chat-failed>
+                <div class="chat-message-meta"><p class="chat-message-label">Você</p></div>
+                <div class="chat-bubble ffds-card"><%= flash[:failed_prompt] %></div>
+              </li>
+            <% end %>
+            <li class="chat-message assistant" role="alert" data-chat-error>
+              <div class="chat-message-meta"><p class="chat-message-label">Athenas</p></div>
+              <div class="chat-error ffds-card"><p><%= flash[:chat_error] %></p><% if flash[:failed_prompt].present? %><button type="button" class="ffds-btn ffds-btn-sm ffds-btn-outline-primary" data-chat-retry-prompt="<%= flash[:failed_prompt] %>">Tentar novamente</button><% end %></div>
+            </li>
+          <% end %>
         </ol>
-      <% end %>
     </div>
 
     <%= form_with url: chat_messages_path, method: :post, class: "chat-form ffds-card" do |form| %>
@@ -71,7 +82,7 @@
         placeholder: "Pergunte sobre os documentos ou peça para encontrar arquivos…", class: "ffds-form-control" %>
       <div class="chat-form-footer">
         <p>Confira as fontes antes de usar uma resposta em decisões ou relatórios.</p>
-        <%= form.submit "Perguntar", class: "ffds-btn ffds-btn-primary", data: { turbo_submits_with: "Consultando o acervo…" } %>
+        <%= form.submit "Perguntar", class: "ffds-btn ffds-btn-primary" %>
       </div>
     <% end %>
   </section>
